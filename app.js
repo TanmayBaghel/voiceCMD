@@ -312,21 +312,30 @@ search [for] (javascript | python | rhasspy | weather | news){query} [on web]`;
     if (!text || !text.trim()) return;
     addLog('system', `Processing Query: "${text}"`);
 
-    try {
-      const res = await fetch('/api/text-to-intent', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: text.trim() })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        handleServerEvent({ type: 'INTENT_PARSED', payload: data });
-        return;
+    // 1. Try relative endpoint or local server endpoint
+    const endpoints = [
+      '/api/text-to-intent',
+      'http://localhost:12101/api/text-to-intent'
+    ];
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text.trim() })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          handleServerEvent({ type: 'INTENT_PARSED', payload: data });
+          return;
+        }
+      } catch (e) {
+        // Try next endpoint or fallback
       }
-    } catch (e) {
-      // Fallback to client-side NLU parsing for GitHub Pages
     }
 
+    // 2. Client-side NLU fallback if local desktop server is not running
     const clientPayload = parseClientNLU(text.trim());
     handleServerEvent({ type: 'INTENT_PARSED', payload: clientPayload });
   }
