@@ -11,11 +11,23 @@ class IntentHandler {
 
     switch (intentName) {
       case 'LaunchApp': {
-        const app = slots.app || 'safari';
-        actionLog = `Opening application: ${app}`;
-        responseText = `Launching ${app} now.`;
+        const rawApp = (slots.app || 'safari').trim();
+        // App name mapping for macOS
+        const appMap = {
+          'safari': 'Safari',
+          'chrome': 'Google Chrome',
+          'finder': 'Finder',
+          'terminal': 'Terminal',
+          'calculator': 'Calculator',
+          'notes': 'Notes',
+          'spotify': 'Spotify',
+          'vlc': 'VLC'
+        };
+        const appName = appMap[rawApp.toLowerCase()] || rawApp.charAt(0).toUpperCase() + rawApp.slice(1);
+        actionLog = `Opening application: ${appName}`;
+        responseText = `Launching ${appName} now.`;
         try {
-          exec(`open -a "${app}"`);
+          exec(`open -a "${appName}" || open -a "${rawApp}"`);
         } catch (e) {
           actionLog += ` (Error: ${e.message})`;
         }
