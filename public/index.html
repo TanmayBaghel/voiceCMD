@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>cmdVoice - Customized Voice Assistant & Command Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+          </svg>
+        </div>
+        <div>
+          <h1>cmdVoice</h1>
+          <span class="sub-brand">Rhasspy-Compatible Voice Assistant</span>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div class="status-badge" id="connectionBadge">
+          <span class="dot offline"></span>
+          <span id="connectionText">Connecting...</span>
+        </div>
+        <div class="port-tag">PORT 12101</div>
+      </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="dashboard-grid">
+
+      <!-- Left Column: Voice Controller & Visualizer -->
+      <section class="card voice-card">
+        <div class="card-header">
+          <h2>Voice Input & Visualizer</h2>
+          <span class="badge" id="micStatusTag">Mic Idle</span>
+        </div>
+
+        <div class="visualizer-container">
+          <canvas id="audioCanvas" width="400" height="140"></canvas>
+          <div class="visualizer-glow"></div>
+        </div>
+
+        <div class="mic-controls">
+          <button id="micBtn" class="mic-button">
+            <div class="mic-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
+              </svg>
+            </div>
+            <span id="micBtnLabel">Click to Speak</span>
+          </button>
+
+          <div class="mode-toggle">
+            <label class="switch">
+              <input type="checkbox" id="autoSpeakCheck" checked>
+              <span class="slider round"></span>
+            </label>
+            <span>Audio Voice Feedback (TTS)</span>
+          </div>
+        </div>
+
+        <div class="text-input-fallback">
+          <input type="text" id="commandInput" placeholder="Or type a voice command e.g., 'open safari', 'check system status'..." />
+          <button id="sendBtn" class="btn primary">Execute</button>
+        </div>
+
+        <div class="quick-preset-chips">
+          <span class="chip" data-cmd="open safari">🚀 Open Safari</span>
+          <span class="chip" data-cmd="check system status">💻 System Status</span>
+          <span class="chip" data-cmd="turn volume up">🔊 Volume Up</span>
+          <span class="chip" data-cmd="search rhasspy voice assistant">🔍 Search Web</span>
+          <span class="chip" data-cmd="set timer for 5 minutes">⏱️ 5m Timer</span>
+        </div>
+      </section>
+
+      <!-- Right Column: Intent Parser Output -->
+      <section class="card intent-card">
+        <div class="card-header">
+          <h2>NLU Intent Recognition</h2>
+          <span id="confidenceTag" class="badge secondary">Confidence: --</span>
+        </div>
+
+        <div class="transcript-box">
+          <div class="box-label">Recognized Speech Text</div>
+          <p id="transcriptText" class="transcript-content">"Click microphone or type command to test intent parser..."</p>
+        </div>
+
+        <div class="intent-details">
+          <div class="detail-row">
+            <span class="label">Intent Name:</span>
+            <span id="intentName" class="intent-tag">Waiting...</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="label">Extracted Slots:</span>
+            <pre id="slotsJson" class="json-box">{}</pre>
+          </div>
+
+          <div class="detail-row">
+            <span class="label">TTS Speech Response:</span>
+            <p id="speechResponse" class="speech-response-box">None</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bottom Left: Sentences.ini Editor -->
+      <section class="card editor-card">
+        <div class="card-header">
+          <h2>Sentences.ini Intent Rules</h2>
+          <button id="trainBtn" class="btn success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+            </svg>
+            Train Engine
+          </button>
+        </div>
+
+        <div class="editor-container">
+          <textarea id="iniEditor" spellcheck="false" placeholder="Loading sentences.ini..."></textarea>
+        </div>
+      </section>
+
+      <!-- Bottom Right: Execution Logs -->
+      <section class="card log-card">
+        <div class="card-header">
+          <h2>Action & System Execution Log</h2>
+          <button id="clearLogBtn" class="btn icon-only" title="Clear Log">🧹</button>
+        </div>
+
+        <div id="logTerminal" class="terminal-box">
+          <div class="log-entry system">
+            <span class="time">[00:00:00]</span>
+            <span class="text">cmdVoice engine initialized. Ready for voice & text intent commands.</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
